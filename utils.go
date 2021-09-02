@@ -1,6 +1,7 @@
 package reddit
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -16,13 +17,18 @@ var (
 	symbolRegex = regexp.MustCompile(`(\$|#)([A-Z0-9]+)`)
 )
 
+var (
+	ErrNotFound      = errors.New("item not found")
+	ErrTypeAssertion = errors.New("unable to assert type")
+)
+
 type CompactT3 struct {
 	Title   string    `json:"title,omitempty"`
 	Text    string    `json:"text,omitempty"`
 	Created time.Time `json:"created,omitempty"`
 	Symbols []string  `json:"symbols,omitempty"`
 	Links   []string  `json:"links,omitempty"`
-	Ups     int
+	Ups     uint
 }
 
 //BrowserRequest -- pretend to be a browser so we can get comments
