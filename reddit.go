@@ -19,11 +19,11 @@ type Awarding struct {
 }
 
 type Data struct {
-	After    string `json:"after,omitempty"`
-	Before   string `json:"before,omitempty"`
-	Children []Link `json:"children,omitempty"`
-	Dist     int    `json:"dist,omitempty"`
-	Modhash  string `json:"modhash,omitempty"`
+	After    string  `json:"after,omitempty"`
+	Before   string  `json:"before,omitempty"`
+	Children []*Link `json:"children,omitempty"`
+	Dist     int     `json:"dist,omitempty"`
+	Modhash  string  `json:"modhash,omitempty"`
 }
 
 type LinkFlairRichText struct {
@@ -40,13 +40,13 @@ type RedditListing struct {
 	Data Data `json:"data"`
 }
 
-func (r RedditCommentResponse) AllChildren() (t []Link) {
+func (r RedditCommentResponse) AllChildren() (t []*Link) {
 	totalChildren := 0
 	for _, v := range r {
 		totalChildren += len(v.Children)
 	}
 
-	t = make([]Link, 0, totalChildren)
+	t = make([]*Link, 0, totalChildren)
 
 	for _, listing := range r {
 		t = append(t, listing.Children...)
@@ -54,13 +54,13 @@ func (r RedditCommentResponse) AllChildren() (t []Link) {
 	return
 }
 
-func (r ListingArray) AllChildren() (t []Link) {
+func (r ListingArray) AllChildren() (t []*Link) {
 	totalChildren := 0
 	for _, v := range r {
 		totalChildren += len(v.Data.Children)
 	}
 
-	t = make([]Link, 0, totalChildren)
+	t = make([]*Link, 0, totalChildren)
 
 	for _, listing := range r {
 		t = append(t, listing.Data.Children...)
@@ -80,15 +80,15 @@ func GetCommentListing(board, id, opts string) (r ListingArray, err error) {
 	return
 }
 
-func GetSub(boardName string) (Subreddit, error) {
-	var board Subreddit
+func getSub(boardName string) (*Subreddit, error) {
+	var board = new(Subreddit)
 	b, _, err := BrowserRequest(redditURL + fmt.Sprintf("/r/%s.json", boardName))
 
 	if err != nil {
 		return board, err
 	}
 
-	err = json.Unmarshal(b, &board)
+	err = json.Unmarshal(b, board)
 	if err != nil {
 		return board, err
 	}

@@ -1,8 +1,12 @@
 package reddit
 
+import "time"
+
 type Link struct {
-	Kind string `json:"kind,omitempty"`
-	Data T3Data `json:"data"`
+	Kind        string `json:"kind,omitempty"`
+	Data        T3Data `json:"data"`
+	Replies     []T3Data
+	lastUpdated time.Time
 }
 
 func (l Link) GetHrefs() (o []string) {
@@ -29,4 +33,19 @@ func (r Data) ChildIDs() (ids []string) {
 	return ids
 }
 
-func (l Link) GetReplies() ([]T3Data, error) { return l.Data.GetReplies() }
+func (l *Link) GetReplies(expiration ...time.Duration) ([]T3Data, error) {
+	var err error
+	if len(expiration) == 0 {
+		l.Replies, err = l.Data.GetReplies()
+		return l.Replies, err
+	}
+
+	if tnow := time.Now(); expiration[0] < tnow.Sub(l.lastUpdated) {
+		l.lastUpdated = tnow
+
+		l.Replies, err = l.Data.GetReplies()
+		return l.Replies, err
+	}
+
+	return l.Replies, nil
+}

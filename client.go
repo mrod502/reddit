@@ -1,7 +1,7 @@
 package reddit
 
 import (
-	"fmt"
+	"time"
 
 	gocache "github.com/mrod502/go-cache"
 )
@@ -12,9 +12,9 @@ type Client struct {
 	dispatcher  gocache.Dispatcher
 }
 
-func NewClient() *Client {
+func NewClient(ttl time.Duration) *Client {
 	return &Client{
-		subreddits:  gocache.NewInterfaceCache(),
+		subreddits:  gocache.NewInterfaceCache().WithExpiration(ttl),
 		subscribers: gocache.NewInterfaceCache(),
 	}
 }
@@ -23,22 +23,15 @@ func (c *Client) AddListener(key string, ch chan []T3Data) {
 	c.subscribers.Set(key, ch)
 }
 
-func (c *Client) AddSub(b string) error {
-	v, err := GetSub(b)
-	if err != nil {
-		return err
-	}
-	c.subreddits.Set(b, &v)
-	return nil
-}
-
 func (c *Client) RemoveSub(b string) {
 	c.subreddits.Delete(b)
 }
 
 func (c *Client) GetSubreddit(b string) (*Subreddit, error) {
 	if !c.subreddits.Exists(b) {
-		return nil, ErrNotFound
+		s, err := getSub(b)
+		c.subreddits.Set(b, s)
+		return s, err
 	}
 	if v, ok := c.subreddits.Get(b).(*Subreddit); ok {
 		return v, nil
@@ -53,7 +46,7 @@ func (c *Client) GetPostReplies(boardId, postId string) (a []T3Data, err error) 
 		return a, ErrNotFound
 	}
 
-	post, err := FindPost(board.Data.Children, func(l Link) bool { return l.Data.Id == postId })
+	post, err := FindPost(board.Data.Children, func(l *Link) bool { return l.Data.Id == postId })
 
 	if err != nil {
 		return a, err
@@ -62,28 +55,13 @@ func (c *Client) GetPostReplies(boardId, postId string) (a []T3Data, err error) 
 	return post.GetReplies()
 }
 
-func FindPost(posts []Link, finder func(Link) bool) (Link, error) {
+func FindPost(posts []*Link, finder func(*Link) bool) (*Link, error) {
 	for _, v := range posts {
 		if finder(v) {
 			return v, nil
 		}
 	}
-	return Link{}, ErrNotFound
-}
-
-//Listen - listens to the selected boards and dispatches changes to the users
-func (c *Client) Refresh() {
-	for _, k := range c.subreddits.GetKeys() {
-		v, ok := c.subreddits.Get(k).(*Subreddit)
-		if !ok || (v == nil) {
-			continue
-		}
-		err := v.Update()
-		if err != nil {
-			fmt.Printf("failed to update %s: %s\n", k, err.Error())
-		}
-	}
-
+	return &Link{}, ErrNotFound
 }
 
 func (c *Client) SetDispatchFunc(f gocache.Dispatcher) {

@@ -3,16 +3,13 @@ package reddit
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestClient(t *testing.T) {
-	var client = NewClient()
+	var client = NewClient(time.Minute)
 
-	err := client.AddSub("wallstreetbets")
-	if err != nil {
-		t.Fatal(err)
-	}
-	board, err := GetSub("wallstreetbets")
+	board, err := client.GetSubreddit("wallstreetbets")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -27,7 +27,7 @@ func (b Subreddit) GetHrefs() (o []string) {
 	return
 }
 
-func (b Subreddit) GetPostReplies(post T3Data) (d []Link, err error) {
+func (b Subreddit) GetPostReplies(post T3Data) (d []*Link, err error) {
 	bytes, _, err := BrowserRequest(fmt.Sprintf("%sr/%s/comments/%s.json", redditBase, post.Subreddit, post.Id))
 	if err != nil {
 		return
@@ -72,7 +72,7 @@ func (b Subreddit) GetAllDiscussion() (t []T3Data, waitTime time.Duration, err e
 }
 
 func (b *Subreddit) Update() error {
-	sub, err := GetSub(b.Subreddit())
+	sub, err := getSub(b.Subreddit())
 
 	if err != nil {
 		return err
