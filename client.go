@@ -9,7 +9,6 @@ import (
 type Client struct {
 	subreddits  *gocache.InterfaceCache
 	subscribers *gocache.InterfaceCache
-	dispatcher  gocache.Dispatcher
 }
 
 func NewClient(ttl time.Duration) *Client {
@@ -33,20 +32,21 @@ func (c *Client) GetSubreddit(b string) (*Subreddit, error) {
 		c.subreddits.Set(b, s)
 		return s, err
 	}
-	if v, ok := c.subreddits.Get(b).(*Subreddit); ok {
-		return v, nil
+	if v, err := c.subreddits.Get(b); err == nil {
+		return v.(*Subreddit), nil
+	} else {
+		return nil, ErrTypeAssertion
 	}
-	return nil, ErrTypeAssertion
 }
 
 func (c *Client) GetPostReplies(boardId, postId string) (a []T3Data, err error) {
-	board, ok := c.subreddits.Get(boardId).(*Subreddit)
-
-	if !ok {
-		return a, ErrNotFound
+	board, err := c.subreddits.Get(boardId)
+	if err != nil {
+		return nil, err
 	}
 
-	post, err := FindPost(board.Data.Children, func(l *Link) bool { return l.Data.Id == postId })
+	sub := board.(*Subreddit)
+	post, err := FindPost(sub.Data.Children, func(l *Link) bool { return l.Data.Id == postId })
 
 	if err != nil {
 		return a, err
@@ -62,8 +62,4 @@ func FindPost(posts []*Link, finder func(*Link) bool) (*Link, error) {
 		}
 	}
 	return &Link{}, ErrNotFound
-}
-
-func (c *Client) SetDispatchFunc(f gocache.Dispatcher) {
-	c.dispatcher = f
 }
