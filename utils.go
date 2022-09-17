@@ -31,12 +31,12 @@ type CompactT3 struct {
 	Ups     uint
 }
 
-//BrowserRequest -- pretend to be a browser so we can get comments
+// BrowserRequest -- pretend to be a browser so we can get comments
 func BrowserRequest(url string) (b []byte, rh http.Header, err error) {
 
 	r, _ := http.NewRequest("GET", url, nil)
 	r.Header.Set("upgrade-insecure-requests", "1")
-	r.Header.Set("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36")
+	r.Header.Set("user-agent", `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36`)
 	r.Header.Set("accept-language", "en-US,en;q=0.9,hr-HR;q=0.8,hr;q=0.7,ru-RU;q=0.6,ru;q=0.5")
 	r.Header.Set("scheme", "https")
 	r.Header.Set("authority", "www.reddit.com")
@@ -55,7 +55,7 @@ func BrowserRequest(url string) (b []byte, rh http.Header, err error) {
 	return
 }
 
-//EnableCORS - enable cross-origin requests
+// EnableCORS - enable cross-origin requests
 func EnableCORS(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Headers", "privatekey")

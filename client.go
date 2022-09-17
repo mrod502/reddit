@@ -7,14 +7,14 @@ import (
 )
 
 type Client struct {
-	subreddits  *gocache.InterfaceCache
-	subscribers *gocache.InterfaceCache
+	subreddits  *gocache.Cache[interface{}, string]
+	subscribers *gocache.Cache[interface{}, string]
 }
 
 func NewClient(ttl time.Duration) *Client {
 	return &Client{
-		subreddits:  gocache.NewInterfaceCache().WithExpiration(ttl),
-		subscribers: gocache.NewInterfaceCache(),
+		subreddits:  gocache.New[interface{}, string]().WithExpiration(ttl),
+		subscribers: gocache.New[interface{}, string](),
 	}
 }
 
